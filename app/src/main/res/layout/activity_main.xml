@@ -24,7 +24,7 @@
         android:src="@drawable/eye"
         android:alpha="0.2"
         />
-//git test
+//git test입니다
     <ImageButton
         android:id="@+id/Button1"
         android:layout_width="80dp"
