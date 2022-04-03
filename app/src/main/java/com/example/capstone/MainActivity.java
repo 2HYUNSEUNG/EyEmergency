@@ -23,7 +23,10 @@ import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.Collections;
 import java.util.List;
@@ -138,16 +141,52 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+        //기존 시작
+//        matInput = inputFrame.rgba();
 
-        matInput = inputFrame.rgba();
+//        if (matResult == null)
+//
+//            matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
+//
+//        ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+//
+//        return matResult;
 
-        if (matResult == null)
+        //기존 끝
 
-            matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
+        //허프 원 변환 시작
+        Mat input = inputFrame.gray();      //변수명 기존거랑 통합할 수 있을 듯 > 나중에 해결하기
+        Mat circles = new Mat();
+        Imgproc.blur(input, input, new Size(7, 7), new Point(2, 2));    //블러처리 없으면 렉 심함 > 원 검출 반경 줄여서 렉 잡기
+        Imgproc.HoughCircles(input, circles, Imgproc.CV_HOUGH_GRADIENT, 1, 1000, 150, 100, 10, 500);
+        //src:입력할 이미지 변수, dst:허프변환 원 검출 정보를 저장할 Array,원의 중심의 정보가 저장됨
+        //method: 원을 검출하는 방법, HOUGH_GRADIENT 를 사용하면 됨, dp: 이미지 해상도, 1은 원본 해상도, 2는 절반 해상도
+        //min_dist: 검출할 원의 최소 거리(원들의 밀도), parameter1:Canny edge detection 에서의 높은 threshold 값
+        //parameter2:accumulator 의 threshold 값, 너무 작으면 거짓 원이 검출 됨
+        //min_Radius: 검출 될 원의 최소 반지름, max_Radius: 검출 될 원의 최대 반지름
+        Log.i(TAG, String.valueOf("size: " + circles.cols()) + ", " + String.valueOf(circles.rows()));
 
-        ConvertRGBtoGray(matInput.getNativeObjAddr(), matResult.getNativeObjAddr());
+        if (circles.cols() > 0) {
+            for (int x=0; x < Math.min(circles.cols(), 5); x++ ) {
+                double circleVec[] = circles.get(0, x);
 
-        return matResult;
+                if (circleVec == null) {
+                    break;
+                }
+
+                Point center = new Point((int) circleVec[0], (int) circleVec[1]);
+                int radius = (int) circleVec[2];
+
+                Imgproc.circle(input, center, 3, new Scalar(255, 255, 255), 5);
+                Imgproc.circle(input, center, radius, new Scalar(255, 255, 255), 2);
+            }
+        }
+
+        circles.release();
+        input.release();
+        return inputFrame.gray();   //inputFrame.rgba() 로 하면 컬러로 나옴
+        //허프 원 변환 끝
+
     }
 
 
