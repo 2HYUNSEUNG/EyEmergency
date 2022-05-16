@@ -281,7 +281,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
             mFpsMeter.setResolution(mFrameWidth, mFrameHeight);
         }
     }
-//
+
     public void disableFpsMeter() {
         mFpsMeter = null;
     }
