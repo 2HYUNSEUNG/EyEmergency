@@ -271,7 +271,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
             checkCurrentState();
         }
     }
-//
+
     /**
      * This method enables label with fps value on the screen
      */
