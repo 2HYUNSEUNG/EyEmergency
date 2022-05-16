@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#AAAAAA"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="동공의 크기 : "
+        android:layout_gravity="center"
+        android:textSize="20dp"
+        android:id="@+id/first_rad"
+        android:layout_marginTop="300dp"
+        android:textStyle="bold"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="빛을 쐰 동공의 크기 : "
+        android:layout_gravity="center"
+        android:textSize="20dp"
+        android:id="@+id/second_rad"
+        android:layout_margin="10dp"
+        android:textStyle="bold"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="상태 \n 의식이 없는 위험 상태입니다.. "
+        android:layout_gravity="center"
+        android:textSize="20dp"
+        android:id="@+id/tv_condition"
+        android:layout_margin="10dp"
+        android:textStyle="bold"
+        />
+
+
+</LinearLayout>

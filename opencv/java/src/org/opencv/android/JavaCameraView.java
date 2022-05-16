@@ -1,5 +1,8 @@
 package org.opencv.android;
 
+import static android.hardware.Camera.Parameters.FLASH_MODE_OFF;
+import static android.hardware.Camera.Parameters.FLASH_MODE_TORCH;
+
 import java.util.List;
 
 import android.content.Context;
@@ -78,12 +81,11 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                 Log.d(TAG, "Trying to open camera with old open()");
                 try {
                     mCamera = Camera.open();
-                }
-                catch (Exception e){
+                } catch (Exception e) {
                     Log.e(TAG, "Camera is not available (in use or does not exist): " + e.getLocalizedMessage());
                 }
 
-                if(mCamera == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+                if (mCamera == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
                     boolean connected = false;
                     for (int camIdx = 0; camIdx < Camera.getNumberOfCameras(); ++camIdx) {
                         Log.d(TAG, "Trying to open camera with new open(" + Integer.valueOf(camIdx) + ")");
@@ -103,7 +105,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                         Log.i(TAG, "Trying to open back camera");
                         Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
                         for (int camIdx = 0; camIdx < Camera.getNumberOfCameras(); ++camIdx) {
-                            Camera.getCameraInfo( camIdx, cameraInfo );
+                            Camera.getCameraInfo(camIdx, cameraInfo);
                             if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
                                 localCameraIndex = camIdx;
                                 break;
@@ -113,7 +115,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                         Log.i(TAG, "Trying to open front camera");
                         Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
                         for (int camIdx = 0; camIdx < Camera.getNumberOfCameras(); ++camIdx) {
-                            Camera.getCameraInfo( camIdx, cameraInfo );
+                            Camera.getCameraInfo(camIdx, cameraInfo);
                             if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
                                 localCameraIndex = camIdx;
                                 break;
@@ -139,6 +141,102 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                 return false;
 
             /* Now set camera parameters */
+// 총 원본 시작
+            try {
+                Camera.Parameters params = mCamera.getParameters();
+                Log.d(TAG, "getSupportedPreviewSizes()");
+                List<android.hardware.Camera.Size> sizes = params.getSupportedPreviewSizes();
+
+                if (sizes != null) {
+                    /* Select the size that fits surface considering maximum size allowed */
+                    Size frameSize = calculateCameraFrameSize(sizes, new JavaCameraSizeAccessor(), width, height);
+
+                    /* Image format NV21 causes issues in the Android emulators */
+                    if (Build.FINGERPRINT.startsWith("generic")
+                            || Build.FINGERPRINT.startsWith("unknown")
+                            || Build.MODEL.contains("google_sdk")
+                            || Build.MODEL.contains("Emulator")
+                            || Build.MODEL.contains("Android SDK built for x86")
+                            || Build.MANUFACTURER.contains("Genymotion")
+                            || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+                            || "google_sdk".equals(Build.PRODUCT))
+                        params.setPreviewFormat(ImageFormat.YV12);  // "generic" or "android" = android emulator
+                    else
+                        params.setPreviewFormat(ImageFormat.NV21);
+
+                    mPreviewFormat = params.getPreviewFormat();
+
+                    Log.d(TAG, "Set preview size to " + Integer.valueOf((int) frameSize.width) + "x" + Integer.valueOf((int) frameSize.height));
+                    params.setPreviewSize((int) frameSize.width, (int) frameSize.height);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH && !android.os.Build.MODEL.equals("GT-I9100"))
+                        params.setRecordingHint(true);
+
+                    List<String> FocusModes = params.getSupportedFocusModes();
+                    if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                    }
+
+                    mCamera.setParameters(params);
+                    params = mCamera.getParameters();
+
+                    mFrameWidth = params.getPreviewSize().width;
+                    mFrameHeight = params.getPreviewSize().height;
+
+// 수정본의 원본 시작
+                    if ((getLayoutParams().width == LayoutParams.MATCH_PARENT) && (getLayoutParams().height == LayoutParams.MATCH_PARENT))
+                        mScale = Math.min(((float) height) / mFrameHeight, ((float) width) / mFrameWidth);
+                    else
+                        mScale = 0;
+// 수정본의 원본 끝
+// 원본의 수정본 시작
+//                    if ((getLayoutParams().width == LayoutParams.MATCH_PARENT) && (getLayoutParams().height == LayoutParams.MATCH_PARENT))
+//                        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+//                            mScale = 1;
+//                        } else {
+//                            mScale = 0;
+//                        }
+// 원본의 수정본 끝
+
+                    if (mFpsMeter != null) {
+                        mFpsMeter.setResolution(mFrameWidth, mFrameHeight);
+                    }
+
+                    int size = mFrameWidth * mFrameHeight;
+                    size = size * ImageFormat.getBitsPerPixel(params.getPreviewFormat()) / 8;
+                    mBuffer = new byte[size];
+
+                    mCamera.addCallbackBuffer(mBuffer);
+                    mCamera.setPreviewCallbackWithBuffer(this);
+
+                    mFrameChain = new Mat[2];
+                    mFrameChain[0] = new Mat(mFrameHeight + (mFrameHeight / 2), mFrameWidth, CvType.CV_8UC1);
+                    mFrameChain[1] = new Mat(mFrameHeight + (mFrameHeight / 2), mFrameWidth, CvType.CV_8UC1);
+
+                    AllocateCache();
+
+                    mCameraFrame = new JavaCameraFrame[2];
+                    mCameraFrame[0] = new JavaCameraFrame(mFrameChain[0], mFrameWidth, mFrameHeight);
+                    mCameraFrame[1] = new JavaCameraFrame(mFrameChain[1], mFrameWidth, mFrameHeight);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                        mSurfaceTexture = new SurfaceTexture(MAGIC_TEXTURE_ID);
+                        mCamera.setPreviewTexture(mSurfaceTexture);
+                    } else
+                        mCamera.setPreviewDisplay(null);
+
+                    /* Finally we are ready to start the preview */
+                    Log.d(TAG, "startPreview");
+                    mCamera.startPreview();
+                } else
+                    result = false;
+            } catch (Exception e) {
+                result = false;
+                e.printStackTrace();
+            }
+        }
+// 총 원본 끝
+// 카메라 비율 수정코드 시작
 //            try {
 //                Camera.Parameters params = mCamera.getParameters();
 //                Log.d(TAG, "getSupportedPreviewSizes()");
@@ -162,39 +260,20 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
 //                        params.setPreviewFormat(ImageFormat.NV21);
 //
 //                    mPreviewFormat = params.getPreviewFormat();
-//
-//                    Log.d(TAG, "Set preview size to " + Integer.valueOf((int)frameSize.width) + "x" + Integer.valueOf((int)frameSize.height));
-//                    params.setPreviewSize((int)frameSize.width, (int)frameSize.height);
-//
-//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH && !android.os.Build.MODEL.equals("GT-I9100"))
-//                        params.setRecordingHint(true);
-//
+////오토포커스 시작
 //                    List<String> FocusModes = params.getSupportedFocusModes();
 //                    if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
 //                    {
 //                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
 //                    }
+////오토포커스 끝
+//                    params.setPreviewSize(1920, 1080);
 //
 //                    mCamera.setParameters(params);
 //                    params = mCamera.getParameters();
 //
-//                    mFrameWidth = params.getPreviewSize().width;
-//                    mFrameHeight = params.getPreviewSize().height;
-//
-////원본
-////                    if ((getLayoutParams().width == LayoutParams.MATCH_PARENT) && (getLayoutParams().height == LayoutParams.MATCH_PARENT))
-////                        mScale = Math.min(((float)height)/mFrameHeight, ((float)width)/mFrameWidth);
-////                    else
-////                        mScale = 0;
-////여기까지 원본
-////수정본
-//                    if ((getLayoutParams().width == LayoutParams.MATCH_PARENT) && (getLayoutParams().height == LayoutParams.MATCH_PARENT))
-//                        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-//                            mScale = 1;
-//                        } else {
-//                            mScale = 0;
-//                        }
-////여기까지 수정본
+//                    mFrameWidth = 1920;
+//                    mFrameHeight = 1080;
 //
 //                    if (mFpsMeter != null) {
 //                        mFpsMeter.setResolution(mFrameWidth, mFrameHeight);
@@ -221,7 +300,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
 //                        mSurfaceTexture = new SurfaceTexture(MAGIC_TEXTURE_ID);
 //                        mCamera.setPreviewTexture(mSurfaceTexture);
 //                    } else
-//                       mCamera.setPreviewDisplay(null);
+//                        mCamera.setPreviewDisplay(null);
 //
 //                    /* Finally we are ready to start the preview */
 //                    Log.d(TAG, "startPreview");
@@ -233,84 +312,8 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
 //                result = false;
 //                e.printStackTrace();
 //            }
-//여기부터 카메라 비율 수정코드
-            try {
-                Camera.Parameters params = mCamera.getParameters();
-                Log.d(TAG, "getSupportedPreviewSizes()");
-                List<android.hardware.Camera.Size> sizes = params.getSupportedPreviewSizes();
-
-                if (sizes != null) {
-                    /* Select the size that fits surface considering maximum size allowed */
-                    Size frameSize = calculateCameraFrameSize(sizes, new JavaCameraSizeAccessor(), width, height);
-
-                    /* Image format NV21 causes issues in the Android emulators */
-                    if (Build.FINGERPRINT.startsWith("generic")
-                            || Build.FINGERPRINT.startsWith("unknown")
-                            || Build.MODEL.contains("google_sdk")
-                            || Build.MODEL.contains("Emulator")
-                            || Build.MODEL.contains("Android SDK built for x86")
-                            || Build.MANUFACTURER.contains("Genymotion")
-                            || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
-                            || "google_sdk".equals(Build.PRODUCT))
-                        params.setPreviewFormat(ImageFormat.YV12);  // "generic" or "android" = android emulator
-                    else
-                        params.setPreviewFormat(ImageFormat.NV21);
-
-                    mPreviewFormat = params.getPreviewFormat();
-
-                    List<String> FocusModes = params.getSupportedFocusModes();
-                    if (FocusModes != null && FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
-                    {
-                        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-                    }
-
-                    params.setPreviewSize(1920, 1080);
-
-                    mCamera.setParameters(params);
-                    params = mCamera.getParameters();
-
-                    mFrameWidth = 1920;
-                    mFrameHeight = 1080;
-
-                    if (mFpsMeter != null) {
-                        mFpsMeter.setResolution(mFrameWidth, mFrameHeight);
-                    }
-
-                    int size = mFrameWidth * mFrameHeight;
-                    size  = size * ImageFormat.getBitsPerPixel(params.getPreviewFormat()) / 8;
-                    mBuffer = new byte[size];
-
-                    mCamera.addCallbackBuffer(mBuffer);
-                    mCamera.setPreviewCallbackWithBuffer(this);
-
-                    mFrameChain = new Mat[2];
-                    mFrameChain[0] = new Mat(mFrameHeight + (mFrameHeight/2), mFrameWidth, CvType.CV_8UC1);
-                    mFrameChain[1] = new Mat(mFrameHeight + (mFrameHeight/2), mFrameWidth, CvType.CV_8UC1);
-
-                    AllocateCache();
-
-                    mCameraFrame = new JavaCameraFrame[2];
-                    mCameraFrame[0] = new JavaCameraFrame(mFrameChain[0], mFrameWidth, mFrameHeight);
-                    mCameraFrame[1] = new JavaCameraFrame(mFrameChain[1], mFrameWidth, mFrameHeight);
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                        mSurfaceTexture = new SurfaceTexture(MAGIC_TEXTURE_ID);
-                        mCamera.setPreviewTexture(mSurfaceTexture);
-                    } else
-                        mCamera.setPreviewDisplay(null);
-
-                    /* Finally we are ready to start the preview */
-                    Log.d(TAG, "startPreview");
-                    mCamera.startPreview();
-                }
-                else
-                    result = false;
-            } catch (Exception e) {
-                result = false;
-                e.printStackTrace();
-            }
-        }
-//여기까지 수정본
+//        }
+// 카메라 비율 수정코드 끝
         return result;
     }
 
@@ -334,6 +337,35 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
             }
         }
     }
+    // 플래시를 위한 코드 시작
+    // getFlashModes, getFlashMode, 없이 setFlashMode 만 있어도 가능
+    public List<String> getFlashModes() {
+        return mCamera.getParameters().getSupportedFlashModes();
+    }
+
+    public String getFlashMode() {
+        return mCamera.getParameters().getFlashMode();
+    }
+
+    public void setFlashMode(String type) {
+        Camera.Parameters params = mCamera.getParameters();
+        params.setFlashMode(type);
+        mCamera.setParameters(params);
+    }
+
+    // 없이 setFlashMode 로만 사용 가능
+    public void turnOffTheFlash() {
+        getFlashModes();
+        getFlashMode();
+        setFlashMode(FLASH_MODE_OFF);
+    }
+
+    public void turnOnTheFlash() {
+        getFlashModes();
+        getFlashMode();
+        setFlashMode(FLASH_MODE_TORCH);
+    }
+    // 플래시를 위한 코드 끝
 
     private boolean mCameraFrameReady = false;
 

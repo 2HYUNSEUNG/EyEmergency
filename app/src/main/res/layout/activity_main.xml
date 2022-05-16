@@ -19,20 +19,38 @@
         android:id="@+id/eyeimg1"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="150dp"
-        android:src="@drawable/eye"
+        android:layout_centerInParent="true"
         android:alpha="0.2"
-        />
-//git test입니다ㅇㅇㅇ
+        android:src="@drawable/eye" />
+
     <ImageButton
         android:id="@+id/Button1"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="650dp"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="730dp"
         android:background="@android:color/transparent"
         android:scaleType="centerInside"
-        android:src="@drawable/camerabtn" />
+        android:src="@drawable/camera3" />
+
+    <ImageButton
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="20dp"
+        android:background="@android:color/transparent"
+        android:scaleType="centerInside"
+        android:id="@+id/btnFlash"
+        android:src="@drawable/flashlight"/>
+
+    <ImageButton
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:background="@android:color/transparent"
+        android:scaleType="centerInside"
+        android:src="@drawable/manual"
+        android:id="@+id/btnGuide" />
 
 </RelativeLayout>

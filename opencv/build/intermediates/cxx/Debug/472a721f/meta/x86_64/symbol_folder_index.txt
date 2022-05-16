@@ -1,1 +1,0 @@
-C:\android-sdk\AndroidStudioProjects\Capstone\opencv\build\intermediates\cxx\Debug\472a721f\obj\x86_64
