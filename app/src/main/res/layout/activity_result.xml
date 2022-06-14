@@ -1,43 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#AAAAAA"
-    android:orientation="vertical">
+    android:background="#DDDDDD"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:id="@+id/resultLayout">
 
-    <TextView
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginBottom="70dp"
+        android:src="@drawable/emergency_call"/>
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="동공의 크기 : "
-        android:layout_gravity="center"
-        android:textSize="20dp"
-        android:id="@+id/first_rad"
-        android:layout_marginTop="300dp"
-        android:textStyle="bold"
-        />
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/bg_gis_result_items_count"
+        android:elevation="10dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="동공반응 걸린시간: "
+            android:layout_gravity="center"
+            android:textSize="15dp"
+            android:textColor="#000000"
+            android:id="@+id/tv_sec"
+            android:layout_marginTop="0dp"
+            android:elevation="10dp"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="동공의 크기: "
+            android:layout_gravity="center"
+            android:textSize="15dp"
+            android:textColor="#000000"
+            android:id="@+id/first_rad"
+            android:layout_marginTop="10dp"
+            android:elevation="10dp"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="빛을 쐰 동공의 크기: "
+            android:layout_gravity="center"
+            android:textSize="15dp"
+            android:textColor="#000000"
+            android:id="@+id/second_rad"
+            android:layout_marginTop="10dp"
+            android:elevation="10dp"
+            />
+
+    </LinearLayout>
 
     <TextView
-        android:layout_width="wrap_content"
+        android:background="@drawable/bg_gis_result_items_count"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="빛을 쐰 동공의 크기 : "
+        android:text="상태 :\n의식이 없는 위험 상태입니다."
         android:layout_gravity="center"
-        android:textSize="20dp"
-        android:id="@+id/second_rad"
-        android:layout_margin="10dp"
-        android:textStyle="bold"
-        />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="상태 \n 의식이 없는 위험 상태입니다.. "
-        android:layout_gravity="center"
-        android:textSize="20dp"
+        android:textSize="25dp"
+        android:textColor="#000000"
         android:id="@+id/tv_condition"
-        android:layout_margin="10dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
         android:textStyle="bold"
+        android:elevation="10dp"
         />
 
+    <TextView
+        android:background="@drawable/bg_gis_result_items_count"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="행동요령\n1. 환자상태 확인\n2. 119 신고\n3. 응급처치 실시"
+        android:layout_gravity="center"
+        android:textSize="20dp"
+        android:textColor="#000000"
+        android:id="@+id/tv_guide"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:elevation="10dp" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="40dp"
+        android:text="119"
+        android:background="@drawable/btn_call"
+        android:textSize="30dp"
+        android:textColor="#FF0000"
+        android:id="@+id/btn_call"
+        android:layout_gravity="center"
+        android:elevation="10dp"
+        />
 
 </LinearLayout>

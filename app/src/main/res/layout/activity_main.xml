@@ -25,32 +25,39 @@
 
     <ImageButton
         android:id="@+id/Button1"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         android:layout_centerVertical="true"
         android:layout_marginLeft="730dp"
-        android:background="@android:color/transparent"
+        android:background="@drawable/icon_back"
         android:scaleType="centerInside"
-        android:src="@drawable/camera3" />
+        android:src="@drawable/camera1" />
 
     <ImageButton
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         android:layout_centerVertical="true"
         android:layout_marginLeft="20dp"
-        android:background="@android:color/transparent"
+        android:background="@drawable/icon_back"
         android:scaleType="centerInside"
         android:id="@+id/btnFlash"
-        android:src="@drawable/flashlight"/>
+        android:src="@drawable/flash"/>
 
     <ImageButton
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         android:layout_marginLeft="20dp"
         android:layout_marginTop="20dp"
-        android:background="@android:color/transparent"
+        android:background="@drawable/icon_back"
         android:scaleType="centerInside"
-        android:src="@drawable/manual"
+        android:src="@drawable/questions"
         android:id="@+id/btnGuide" />
+
+    <Chronometer
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/chrono"
+        android:gravity="center"
+        android:visibility="invisible" />
 
 </RelativeLayout>

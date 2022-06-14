@@ -3,8 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/android-sdk/AndroidStudioProjects/Capstone/app/src/main/res/layout/activity_main.xml" value="0.16666666666666666" />
-        <entry key="..\:/android-sdk/AndroidStudioProjects/Capstone/app/src/main/res/layout/activity_result.xml" value="0.2859375" />
+        <entry key="..\:/android-sdk/AndroidStudioProjects/Capstone/app/src/main/res/drawable/bg_gis_result_items_count.xml" value="0.1595" />
+        <entry key="..\:/android-sdk/AndroidStudioProjects/Capstone/app/src/main/res/drawable/btn_call.xml" value="0.1595" />
+        <entry key="..\:/android-sdk/AndroidStudioProjects/Capstone/app/src/main/res/drawable/icon_back.xml" value="0.1595" />
+        <entry key="..\:/android-sdk/AndroidStudioProjects/Capstone/app/src/main/res/layout/activity_main.xml" value="0.1515625" />
+        <entry key="..\:/android-sdk/AndroidStudioProjects/Capstone/app/src/main/res/layout/activity_result.xml" value="0.25277777777777777" />
       </map>
     </option>
   </component>

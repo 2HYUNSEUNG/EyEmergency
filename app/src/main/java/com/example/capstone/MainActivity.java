@@ -15,11 +15,13 @@ import android.annotation.TargetApi;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -77,6 +79,8 @@ public class MainActivity extends AppCompatActivity
 
 
     double first_radius = 0, second_radius = 0;
+
+    int sec = 0;
 
     public native void ConvertRGBtoGray(long matAddrInput, long matAddrResult);
 
@@ -137,6 +141,7 @@ public class MainActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_main);
 
+        Chronometer chrono = (Chronometer) findViewById(R.id.chrono);
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.activity_surface_view);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);                                           // 지우면 카메라 안보임
@@ -199,11 +204,15 @@ public class MainActivity extends AppCompatActivity
                     second_radius = avg / s;                                                //빛을 쐰 후, 반지름 값으로 저장.
                     resList.clear();
 
+                    chrono.stop();
+                    sec = (int) (((SystemClock.elapsedRealtime() - chrono.getBase()) /1000));
+
                     javaCameraView.turnOffTheFlash();
 
                     Intent resultIntent = new Intent(MainActivity.this, ResultActivity.class);              //화면 전환 설정
                     resultIntent.putExtra("first_radius", first_radius);                                           //전환된 화면에 빛 쐬기 전 반지름 값 넘기기
                     resultIntent.putExtra("second_radius", second_radius);                                         //전환된 화면에 빛 쐰 후 반지름 값 넘기기
+                    resultIntent.putExtra("sec", sec);
                     startActivity(resultIntent);                                                                         // 화면 전환 실행
                 }
             }
@@ -228,6 +237,9 @@ public class MainActivity extends AppCompatActivity
 
                     Toast.makeText(MainActivity.this, "동공이 검출 되었습니다.", Toast.LENGTH_SHORT).show();
 
+                    chrono.setBase(SystemClock.elapsedRealtime());
+                    chrono.start();
+
                     new Handler().postDelayed(new Runnable()
                     {
                         @Override
@@ -235,7 +247,7 @@ public class MainActivity extends AppCompatActivity
                         {
                             javaCameraView.turnOnTheFlash(); //딜레이 후 시작할 코드 작성
                         }
-                    }, 500);// 0.6초 정도 딜레이를 준 후 시작
+                    }, 500);                        // 0.5초 정도 딜레이를 준 후 시작
                 }
                 resList.clear();
 
@@ -384,17 +396,17 @@ public class MainActivity extends AppCompatActivity
         // 범위
         Core.inRange(img_hue, new Scalar(0, 0, 0), new Scalar(255, 255, 32), img_hue);
         // 침식
-        Imgproc.erode(img_hue, img_hue, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3)));
-        // 확장
-        Imgproc.dilate(img_hue, img_hue, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(6, 6)));
+        Imgproc.erode(img_hue, img_hue, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3)));     // 33
+        // 팽창
+        Imgproc.dilate(img_hue, img_hue, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(6, 6)));    // 66
         // 캐니 엣지 검출
-        Imgproc.Canny(img_hue, img_hue, 170, 220);
+        Imgproc.Canny(img_hue, img_hue, 170, 220);          // 170, 220
         // 가우시안 필터링으로 블러주기, sigma 값 높을수록 강한 블러
-        Imgproc.GaussianBlur(img_hue, img_hue, new Size(9, 9), 2, 2);
+        Imgproc.GaussianBlur(img_hue, img_hue, new Size(9, 9), 2, 2);       // 99, 22
         // 허프 변환으로 원 찾기
         Imgproc.HoughCircles(img_hue, circles, Imgproc.CV_HOUGH_GRADIENT,
-                1, 20, 50, 30, 7, 21);
-
+                1, 20, 50, 30, 2, 21);
+                                    // 50           30
 
         if (circles.cols() > 0) {
             for (int x = 0; x < circles.cols(); x++) {
